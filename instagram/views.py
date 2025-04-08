@@ -1,5 +1,9 @@
-from django.shortcuts import render
+from django.views.generic import CreateView
 from django.views.generic import TemplateView
+from django.urls import reverse_lazy
+from django.contrib.auth.models import User
+from .forms import RegistrationForm
+
 
 # Create your views here.
 
@@ -11,8 +15,13 @@ class LoginView(TemplateView):
     template_name = 'general/login.html'
 
 
-class RegisterView(TemplateView):
+class RegisterView(CreateView):
+    model = User
     template_name = 'general/register.html'
+    # fields = ['first_name', 'username', 'email', 'password']
+    form_class = RegistrationForm
+    success_url = reverse_lazy('home')
+
 
 
 class LegalView(TemplateView):
