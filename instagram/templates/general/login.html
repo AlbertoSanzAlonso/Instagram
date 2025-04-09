@@ -1,10 +1,21 @@
 {% extends "general/layout.html" %}
+{% load crispy_forms_tags %}
 
 {% block head_title %}Login{% endblock %}
 
 {% block page_content %}
     <div class="container">
-        <h1>Inicio de sesión</h1>
-        <p>Este es el contenido de inicio de sesión</p>
+        {% include "_includes/_messages.html" %} 
+        <form method="post">
+            {% csrf_token %}
+            <h1>Iniciar Sesión</h1>
+            <div class="row">
+                <div class="col-12 col-sm-6">
+                  {{ form.username|as_crispy_field }}
+                  {{ form.password|as_crispy_field }}
+                </div>
+              </div>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
     </div>
 {% endblock %}
