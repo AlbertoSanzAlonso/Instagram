@@ -17,6 +17,9 @@ class RegistrationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         user.save()
 
+        from profiles.models import UserProfile
+        UserProfile.objects.create(user=user)
+
         return user
     
 class LoginForm(forms.Form):

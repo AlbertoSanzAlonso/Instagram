@@ -10,6 +10,8 @@
                 {% endif %}
                 <li><a href="{% url 'contact' %}">Contacto</a></li>
                 {% if request.user.is_authenticated %}
+                    <li><a href="{% url 'post_create' %}">Nueva Publicación</a></li>
+                    <li><a href="{% url 'profile_detail' request.user.profile.pk %}">Mi perfil</a></li>
                     <li><a href="{% url 'logout' %}">Log out</a></li>
                 {% endif %}
             </ul>
