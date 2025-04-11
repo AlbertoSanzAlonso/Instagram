@@ -6,13 +6,18 @@ from .forms import RegistrationForm, LoginForm
 from django.contrib import messages
 from django.views.generic.edit import FormView
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.views.generic.detail import DetailView
 from profiles.models import UserProfile
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from posts.models import Post
+from django.urls import reverse
+from django.views.generic import ListView
+from django.shortcuts import get_object_or_404
+
+
 
 
 
@@ -60,8 +65,6 @@ class RegisterView(CreateView):
         return super(RegisterView, self).form_valid(form)
   
 
-
-
 class LegalView(TemplateView):
     template_name = 'general/legal.html'
 
@@ -77,6 +80,15 @@ class ProfileDetailView(DetailView):
 
 
 @method_decorator(login_required, name='dispatch')
+class ProfileListView(ListView):
+    model = UserProfile
+    template_name = 'general/profile_list.html'
+    context_object_name = 'profiles'
+
+    def get_queryset(self):
+        return UserProfile.objects.all().exclude(user=self.request.user)
+
+@method_decorator(login_required, name='dispatch')
 class ProfileUpdateView(UpdateView):
     model = UserProfile
     template_name = "general/profile_update.html"
@@ -87,6 +99,12 @@ class ProfileUpdateView(UpdateView):
         'birth_date',
     ]
     # success_url = reverse_lazy('')
+
+    def dispatch(self, request, *args, **kwargs):
+        user_profile = self.get_object()
+        if user_profile.user != self.request.user:
+            return HttpResponseRedirect(reverse('home'))
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         messages.add_message(self.request, messages.SUCCESS, "Perfil editado correctamente.")
@@ -103,3 +121,14 @@ def logout_view(request):
     return HttpResponseRedirect(reverse_lazy('home'))
 
 
+@login_required
+def follow(request, user_to_follow_pk):
+    user = get_object_or_404(User, pk=user_to_follow_pk)
+    
+
+    if request.user != user:
+        return HttpResponseForbidden()
+
+    if user.profile.follows.filter(pk=user_2.pk).exists():
+        return HttpResponseRedirect(reverse('profiles:profile', args={user.username}))
+    user_to_follow_pk.profile.follows.add(user.profile)    

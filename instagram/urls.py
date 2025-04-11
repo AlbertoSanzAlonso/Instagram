@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from instagram.views import HomeView, LoginView, RegisterView, LegalView, ContactView, logout_view, ProfileDetailView, ProfileUpdateView
+from instagram.views import HomeView, LoginView, RegisterView, LegalView, ContactView, logout_view, ProfileDetailView, ProfileUpdateView, ProfileListView
 from posts.views import PostCreateView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -30,6 +30,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('legal/', LegalView.as_view(), name='legal'),
     path('contact/', ContactView.as_view(), name='contact'),
+    path('profile/list/', ProfileListView.as_view(), name='profile_list'),
     path('profile/<pk>/', ProfileDetailView.as_view(), name='profile_detail'),
     path('profile/update/<pk>/', ProfileUpdateView.as_view(), name='profile_update'),
     path('posts/create/', PostCreateView.as_view(), name='post_create'),
