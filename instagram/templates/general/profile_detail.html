@@ -1,5 +1,5 @@
 {% extends "general/layout.html" %}
-
+{% load crispy_forms_tags %}
 {% block head_title %}Contacto{% endblock %}
 
 {% block page_content %}
@@ -22,11 +22,11 @@
         {% if profile not in request.user.profile.follower_set.all %}
             <p>No lo estoy siguiendo</p>
             <p>
-                <form action="">
-                    
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.profile_pk|as_crispy_field }}
+                    <button>Seguir</button>
                 </form>
-                
-                <button>Seguir</button>
             </p>
         {% endif %}
         {% if profile.user == request.user  %}

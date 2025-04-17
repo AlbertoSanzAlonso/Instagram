@@ -28,3 +28,7 @@ class LoginForm(forms.Form):
         label="Password", 
         widget=forms.PasswordInput()
         )
+    
+
+class ProfileFollow(forms.Form):
+    profile_pk = forms.IntegerField(widget=forms.HiddenInput())

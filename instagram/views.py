@@ -2,20 +2,20 @@ from django.views.generic import CreateView
 from django.views.generic import TemplateView
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
-from .forms import RegistrationForm, LoginForm
+from .forms import RegistrationForm, LoginForm, ProfileFollow
 from django.contrib import messages
 from django.views.generic.edit import FormView
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.views.generic.detail import DetailView
-from profiles.models import UserProfile
+from profiles.models import UserProfile, Follow
 from django.views.generic.edit import UpdateView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from posts.models import Post
 from django.urls import reverse
 from django.views.generic import ListView
-from django.shortcuts import get_object_or_404
+
 
 
 
@@ -73,10 +73,40 @@ class ContactView(TemplateView):
 
 
 @method_decorator(login_required, name='dispatch')
-class ProfileDetailView(DetailView):
+class ProfileDetailView(DetailView, FormView):
     model = UserProfile
     template_name = 'general/profile_detail.html'
     context_object_name = 'profile'
+    form_class = ProfileFollow
+
+    def get_initial(self):
+        self.initial['profile_pk'] = self.get_object().pk
+        return super().get_initial()
+    
+
+    def form_valid(self, form):
+        profile_pk = form.cleaned_data.get('profile_pk')
+        following = UserProfile.objects.get(pk=profile_pk)
+        Follow.objects.get_or_create(
+            follower=self.request.user.profile,
+            following=following
+        )
+
+        messages.add_message(self.request, messages.SUCCESS, f'Usuario seguido correctamente.')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('profile_detail', args=[self.get_object().pk])
+    
+    def context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Comprobamos si seguimos al usuario
+
+        following = Follow.objects.filter(follower=self.request.user.profile, following=self.get_object()).exists()
+        context['following'] = following
+        return context
+
 
 
 @method_decorator(login_required, name='dispatch')
