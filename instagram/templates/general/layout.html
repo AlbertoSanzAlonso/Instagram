@@ -6,6 +6,21 @@
     <title>{% block head_title %}Titulo Base{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        .likeButton {
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+        }
+
+        .profile-img {
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            object-fit: cover;
+        }
+        
+    </style>
 </head>
 <body>
     
@@ -18,7 +33,43 @@
     {% include "_includes/_footer.html" %}
 
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aquí puedes agregar cualquier código JavaScript que necesites ejecutar al cargar la página
+    const likeButtons = document.querySelectorAll('a.likeButton');
+    likeButtons.forEach(likeButton => {
+        let nLikesSpan = likeButton.querySelector('span');
+        if (!nLikesSpan) {
+            return;
+        };
+        let nLikes = parseInt(nLikesSpan.innerHTML);
+        // Evita el comportamiento predeterminado del enlace
+        likeButton.addEventListener('click', (event) => {
+            event.preventDefault(); 
+            // Hacemos una petición GET al href del botón
+            fetch(likeButton.href)
+                .then(response => response.json())
+                .then(data => {
+                    // Si la petición fue exitosa, actualizamos el botón
+                    if (data.liked) {
+                        // Actualiza el contador de likes
+                        nLikes += 1;
+                        likeButton.innerHTML =  `<span>${nLikes}</span> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-heart-fill" viewBox="0 0 16 16" color="black"><path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/></svg>`;
+                        nLikesSpan.innerHTML = nLikes;
+                    } else {
+                        nLikes -= 1;
+                        likeButton.innerHTML =  `<span>${nLikes}</span> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16" color="black"><path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/></svg>`;
+                        nLikesSpan.innerHTML = nLikes;
+                    }
+                });
+        });
+    });
+    });
+    
+    
+</script>
 </body>
 </html>
 

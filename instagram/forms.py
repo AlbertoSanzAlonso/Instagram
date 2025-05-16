@@ -30,5 +30,3 @@ class LoginForm(forms.Form):
         )
     
 
-class ProfileFollow(forms.Form):
-    profile_pk = forms.IntegerField(widget=forms.HiddenInput())

@@ -2,11 +2,11 @@ from django.views.generic import CreateView
 from django.views.generic import TemplateView
 from django.urls import reverse_lazy
 from django.contrib.auth.models import User
-from .forms import RegistrationForm, LoginForm, ProfileFollow
+from .forms import RegistrationForm, LoginForm
 from django.contrib import messages
 from django.views.generic.edit import FormView
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseRedirect
 from django.views.generic.detail import DetailView
 from profiles.models import UserProfile, Follow
 from django.views.generic.edit import UpdateView
@@ -15,11 +15,7 @@ from django.utils.decorators import method_decorator
 from posts.models import Post
 from django.urls import reverse
 from django.views.generic import ListView
-
-
-
-
-
+from profiles.forms import ProfileFollow
 
 # Create your views here.
 
@@ -29,7 +25,15 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        last_posts = Post.objects.all().order_by('created_at')[:5]
+        # Si el usuario está logueado
+        if self.request.user.is_authenticated:
+            # Obtenemos post de los usuarios que seguimos
+            following = Follow.objects.filter(follower=self.request.user.profile).values_list('following__user', flat=True)
+            # Nos traemos los posts de los usuarios que seguimos
+            last_posts = Post.objects.filter(user__profile__user__in=following)
+        else:
+            # Si no está logueado, mostramos los últimos posts
+            last_posts = Post.objects.all().order_by('-created_at')
         context['last_posts'] = last_posts
 
         return context
@@ -86,19 +90,42 @@ class ProfileDetailView(DetailView, FormView):
 
     def form_valid(self, form):
         profile_pk = form.cleaned_data.get('profile_pk')
+        action = form.cleaned_data.get('action')
         following = UserProfile.objects.get(pk=profile_pk)
-        Follow.objects.get_or_create(
+
+        if Follow.objects.filter(
             follower=self.request.user.profile,
             following=following
-        )
+        ).exists():
+            Follow.objects.filter(
+                follower=self.request.user.profile,
+                following=following
+            ).delete()
+            messages.add_message(self.request, messages.SUCCESS, f'Usuario dejado de seguir correctamente.')
+        else:
+            Follow.objects.get_or_create(
+                follower=self.request.user.profile,
+                following=following
+            )
+            messages.add_message(self.request, messages.SUCCESS, f'Usuario seguido correctamente.')
 
-        messages.add_message(self.request, messages.SUCCESS, f'Usuario seguido correctamente.')
+
+        # if action == 'follow':
+        #     Follow.objects.get_or_create(
+        #         follower=self.request.user.profile,
+        #         following=following
+        #     )
+        #     messages.add_message(self.request, messages.SUCCESS, f'Usuario seguido correctamente.')
+        # elif action == 'unfollow':
+       
+        #     messages.add_message(self.request, messages.SUCCESS, f'Usuario dejado de seguir correctamente.')
+        
         return super().form_valid(form)
     
     def get_success_url(self):
         return reverse('profile_detail', args=[self.get_object().pk])
     
-    def context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         # Comprobamos si seguimos al usuario
@@ -116,8 +143,9 @@ class ProfileListView(ListView):
     context_object_name = 'profiles'
 
     def get_queryset(self):
-        return UserProfile.objects.all().exclude(user=self.request.user)
+        return UserProfile.objects.all().order_by('user__username').exclude(user=self.request.user)
 
+        
 @method_decorator(login_required, name='dispatch')
 class ProfileUpdateView(UpdateView):
     model = UserProfile
@@ -151,14 +179,14 @@ def logout_view(request):
     return HttpResponseRedirect(reverse_lazy('home'))
 
 
-@login_required
-def follow(request, user_to_follow_pk):
-    user = get_object_or_404(User, pk=user_to_follow_pk)
+# @login_required
+# def follow(request, user_to_follow_pk):
+#     user = get_object_or_404(User, pk=user_to_follow_pk)
     
 
-    if request.user != user:
-        return HttpResponseForbidden()
+#     if request.user != user:
+#         return HttpResponseForbidden()
 
-    if user.profile.follows.filter(pk=user_2.pk).exists():
-        return HttpResponseRedirect(reverse('profiles:profile', args={user.username}))
-    user_to_follow_pk.profile.follows.add(user.profile)    
+#     if user.profile.follows.filter(pk=user.pk).exists():
+#         return HttpResponseRedirect(reverse('profiles:profile', args={user.username}))
+#     user_to_follow_pk.profile.follows.add(user.profile)    
